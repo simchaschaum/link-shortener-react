@@ -86,7 +86,7 @@ class MainForm extends React.Component{
     render(){
 
         let clearLinksBtn = this.state.links.length === 0 ? null
-            : <a id="clearLinks" className="link" onClick={this.clearLinks}>Clear Links</a>
+            : <button id="clearLinks" className="link" onClick={this.clearLinks}>Clear Links</button>
 
         return(<div>
             <form id="input" action="">

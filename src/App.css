@@ -158,8 +158,9 @@ form #inputDiv{
 }
 
 /* Display Links */
-a#clearLinks{
-    margin-top: 50px
+button#clearLinks{
+    border: none;
+    background: none;
 }
 div.links{
     display: flex;
