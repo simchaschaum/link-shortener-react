@@ -32,6 +32,9 @@ class MainForm extends React.Component{
                     timeStamp: item.timeStamp
                 })
             })
+            newArr.sort((a,b)=>{
+                return b.timeStamp - a.timeStamp;
+            })
             this.setState({links: newArr}, ()=> console.log(this.state.links))
         })
     }
