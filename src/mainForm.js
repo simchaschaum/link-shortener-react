@@ -3,7 +3,9 @@ import { FormControl, FormLabel, RadioGroup, FormControlLabel, Radio } from "@ma
 import './App.css';
 import HandleError from "./handleError";
 import Link from "./link";
-import Spinner from 'react-bootstrap/Spinner'
+import Spinner from 'react-bootstrap/Spinner';
+import {onSnapshot, collection, doc, addDoc, query, orderBy} from 'firebase/firestore';
+import db from './utils/firebase';
 
 class MainForm extends React.Component{
     constructor(props){
@@ -17,17 +19,24 @@ class MainForm extends React.Component{
             links: []
         }
     }
-   
-    // const [inputLink, setInputLink] = useState();
-    // const [shortDomain, setShortDomain] = useState("shrtco.de");
-    // const [errorMsg, setErrorMsg] = useState("");
-    // const [hideSpinner, setHideSpinner] = useState(true);
-    // const [submitBtn, setSubmitBtn] = useState("Shorten it!");
-    // const [links, setLinks] = useState([]);
-    // let linksArr = links;
 
+    async componentDidMount(){
+        onSnapshot(collection(db,"links"),(snapshot)=>{
+            const data = snapshot.docs.map(doc => doc.data());
+            console.log(snapshot)
+            const newArr = [];
+            data.forEach(item => {
+                newArr.push({
+                    shortLink: item.shortLink,
+                    longLink: item.longLink,
+                    timeStamp: item.timeStamp
+                })
+            })
+            this.setState({links: newArr}, ()=> console.log(this.state.links))
+        })
+    }
 
-    handleSubmit = (e) => {
+    handleSubmit = async (e) => {
         e.preventDefault();
         if(this.state.inputLink && this.state.inputLink){
             let submitBtnArr = ["Shortening...","Getting there...", "Working on it...", "Sorry for the delay..."];
@@ -36,26 +45,20 @@ class MainForm extends React.Component{
                 hideSpinner: false,
                 submitBtn: submitBtnArr[0]
             })
-            // setErrorMsg("");
-            // setHideSpinner(false);
             let num = 0;
-            // setSubmitBtn(submitBtnArr[0])
             let msgChange = () => {
                 num = num === 3 ? 0 : num+1;
                 this.setState({submitBtn: submitBtnArr[num]})
-                // setSubmitBtn(submitBtnArr[num])
             }
             let submitBtnChg = setInterval(msgChange, 3000);    
             const start = 'https://api.shrtco.de/v2/shorten?url=';
             const longLink = this.state.inputLink;
-            console.log("fetching...");        
+            console.log("fetching...");                 
             fetch(start + longLink)
             .then(response => response.json())
             .then(data => {
                 console.log(data);
                 clearInterval(submitBtnChg);
-                // setSubmitBtn("Shorten it!");
-                // setHideSpinner(true)
                 this.setState({
                     submitBtn: "Shorten it!",
                     hideSpinner: true
@@ -68,15 +71,29 @@ class MainForm extends React.Component{
                             : data.result.short_link3;
                     let newArr = this.state.links;
                     newArr.unshift({
-                        link: display,
-                        originalLink: data.result.original_link
+                        shortLink: display,
+                        longLink: data.result.original_link,
+                        timeStamp: Date.now()
                     })
-                    this.setState({links: newArr, inputLink: ""});
+                   
+                    this.setState({inputLink: ""});
+                    this.changeDB(newArr);
                 }
             })
         } else {
             this.setState({errorMsg: HandleError(2)})
         }
+    }
+
+    changeDB = async (newArr) => {
+        const collectionRef = collection(db,"links");
+        const payload = {
+            shortLink: newArr[0].shortLink,
+            longLink: newArr[0].longLink,
+            timeStamp: newArr[0].timeStamp
+        }
+        const docRef = await addDoc(collectionRef, payload);
+        // console.log(`New ID: ${docRef.id}`);
     }
 
     clearLinks = () => {
@@ -118,8 +135,8 @@ class MainForm extends React.Component{
             {clearLinksBtn}
             <div>{this.state.links.map((item,index) => (<div key={index}>
                 <Link 
-                    link={item.link}
-                    originalLink={item.originalLink}
+                    link={item.shortLink}
+                    originalLink={item.longLink}
                 />
                 </div>))}</div>
         </div>)

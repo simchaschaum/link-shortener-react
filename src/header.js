@@ -1,7 +1,22 @@
+import { useState } from "react";
+import Login from './login';
+import LogsigninBtns from "./logsigninBtns";
 
 const Header = () => {
+    const [formState, setFormState] = useState(0) // 0 = buttons (no form); 1 = show form
+    const [formVal, setFormVal] = useState(0) // 0 = signin; 1 = login
+
+    const openForm = (val) => {
+        setFormState(1);
+        setFormVal(val);
+    }
+
     return(
         <div>
+            {formState === 0 ? 
+                <LogsigninBtns openSigninForm={()=>openForm(0)} openLoginForm={()=>openForm(1)}/>
+                    : <Login formVal={formVal} closeForm={()=>setFormState(0)}/>
+            }
             <h1>Link Shortener</h1>
             <div>
                 <h3>Shorten any URL!</h3>
